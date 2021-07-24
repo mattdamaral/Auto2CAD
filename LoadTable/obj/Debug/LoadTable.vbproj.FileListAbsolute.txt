@@ -1,0 +1,10 @@
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\bin\Debug\LoadTable.dll
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\bin\Debug\LoadTable.pdb
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\bin\Debug\LoadTable.xml
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\obj\Debug\LoadTable.Resources.resources
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\obj\Debug\LoadTable.vbproj.GenerateResource.cache
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\obj\Debug\LoadTable.vbproj.CoreCompileInputs.cache
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\obj\Debug\LoadTable.dll
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\obj\Debug\LoadTable.xml
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\obj\Debug\LoadTable.pdb
+C:\Users\mathg\OneDrive\Área de Trabalho\AutoCAD Automation Stuff\Plugins\Load Table\LoadTable\obj\Debug\LoadTable.vbprojAssemblyReference.cache
