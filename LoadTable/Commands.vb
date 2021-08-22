@@ -180,8 +180,10 @@ goto_01:
 
             circLoadList.Sort(Function(x, y) x.circ.CompareTo(y.circ))
             Dim loadTableAux As LoadTableClass = New LoadTableClass(circLoadList)
-            Call LoadTableClass.CreateTable(loadTableAux)
-            Call LoadTableClass.CreateDiagram(loadTableAux)
+            'Call LoadTableClass.CreateTable(loadTableAux)
+            loadTableAux.CreateTable()
+            'Call LoadTableClass.CreateDiagram(loadTableAux)
+            loadTableAux.CreateDiagram()
 
         End If
 
@@ -381,7 +383,8 @@ goto_01:
             End While
         End Using
         Dim loadTable As LoadTableClass = New LoadTableClass(circList, totalDesc, totalLoad, totalPhases, totalR, totalS, totalT, totalWire, totalBreaker)
-        Call LoadTableClass.CreateDiagram(loadTable)
+        'Call LoadTableClass.CreateDiagram(loadTable)
+        loadTable.CreateDiagram()
     End Sub
 End Class
 
