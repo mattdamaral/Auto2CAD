@@ -7,6 +7,7 @@ Imports Autodesk.AutoCAD.EditorInput
 Public Class LoadTableClass
 
     Public circList As List(Of CircuitClass)
+    Public DRList As New List(Of DRClass)
 
     Public totalDesc As String
     Public totalLoad As Double
@@ -64,7 +65,7 @@ Public Class LoadTableClass
 
     'End Sub
 
-    Private Sub DistributeLoads()   ' Distributes the each circuit's load beetween phases R, S and T
+    Public Sub DistributeLoads()   ' Distributes the each circuit's load beetween phases R, S and T
 
         'MsgBox(circList.Count - 1)
 
@@ -273,7 +274,7 @@ end_of_for_01:
 
     ' Creates the Table itself ----------------------------------------------------------------------------------------------------------------------
     <Obsolete>
-    Public Shared Sub CreateTable(loadTableAux As LoadTableClass)
+    Public Sub CreateTable()
 
         ' Accessess the database -------------------------------------------------------------------------------------------
         Dim doc As Document = Application.DocumentManager.MdiActiveDocument
@@ -285,7 +286,8 @@ end_of_for_01:
         If pr.Status = PromptStatus.OK Then
 
             Dim table As Table = New Table()
-            Dim circuits As List(Of CircuitClass) = loadTableAux.circList
+            'Dim circuits As List(Of CircuitClass) = loadTableAux.circList
+            Dim circuits As List(Of CircuitClass) = circList
 
             With table
 
@@ -353,12 +355,18 @@ end_of_for_01:
                 .SetTextString(rows - totalRows, 0, "Total")
                 Dim range As CellRange = CellRange.Create(table, rows - totalRows, 0, rows - totalRows, 1)
                 .MergeCells(range)
-                .SetTextString(rows - totalRows, 2, loadTableAux.totalLoad.ToString)
-                .SetTextString(rows - totalRows, 3, loadTableAux.totalR.ToString)
-                .SetTextString(rows - totalRows, 4, loadTableAux.totalS.ToString)
-                .SetTextString(rows - totalRows, 5, loadTableAux.totalT.ToString)
-                .SetTextString(rows - totalRows, 6, loadTableAux.totalWire.ToString)
-                .SetTextString(rows - totalRows, 7, loadTableAux.totalBreaker.ToString)
+                '.SetTextString(rows - totalRows, 2, loadTableAux.totalLoad.ToString)
+                '.SetTextString(rows - totalRows, 3, loadTableAux.totalR.ToString)
+                '.SetTextString(rows - totalRows, 4, loadTableAux.totalS.ToString)
+                '.SetTextString(rows - totalRows, 5, loadTableAux.totalT.ToString)
+                '.SetTextString(rows - totalRows, 6, loadTableAux.totalWire.ToString)
+                '.SetTextString(rows - totalRows, 7, loadTableAux.totalBreaker.ToString)
+                .SetTextString(rows - totalRows, 2, totalLoad.ToString)
+                .SetTextString(rows - totalRows, 3, totalR.ToString)
+                .SetTextString(rows - totalRows, 4, totalS.ToString)
+                .SetTextString(rows - totalRows, 5, totalT.ToString)
+                .SetTextString(rows - totalRows, 6, totalWire.ToString)
+                .SetTextString(rows - totalRows, 7, totalBreaker.ToString)
 
                 table.GenerateLayout()
 
@@ -420,7 +428,8 @@ end_of_for_01:
     End Sub
 
     <Obsolete>
-    Public Shared Sub CreateDiagram(loadTableAux As LoadTableClass)
+    Public Sub CreateDiagram()
+        'Public Sub CreateDiagram(loadTableAux As LoadTableClass)
 
         Dim doc As Document = Application.DocumentManager.MdiActiveDocument
         Dim db As Database = doc.Database
@@ -430,15 +439,12 @@ end_of_for_01:
 
         If pr.Status = PromptStatus.OK Then
 
-            'Dim descText As DBText
-            'Dim totalLoadText As DBText
-            'Dim frame As Polyline
-
             Using trans As Transaction = db.TransactionManager.StartTransaction()
 
                 Call Commands.ChangeLayer("MD - Diagrama Unifilar")
 
-                Dim circuits As List(Of CircuitClass) = loadTableAux.circList
+                'Dim circuits As List(Of CircuitClass) = loadTableAux.circList
+                Dim circuits As List(Of CircuitClass) = circList
 
                 Dim blkPos As Point3d = New Point3d(pr.Value.X, pr.Value.Y, pr.Value.Z)
 
@@ -492,7 +498,8 @@ end_of_for_01:
 
                                                     Select Case attRef.Tag
                                                         Case "CIRC_DISJUNTOR"
-                                                            If loadTableAux.fromCSV = True Then
+                                                            'If loadTableAux.fromCSV = True Then
+                                                            If fromCSV = True Then
                                                                 If circuits(index).desc.Contains("Iluminação") Then
                                                                     attRef.TextString = circuits(index).breaker.ToString & " A - B"
                                                                 Else
@@ -503,7 +510,8 @@ end_of_for_01:
                                                             End If
                                                             Exit Select
                                                         Case "CIRC_SEÇÃO"
-                                                            If loadTableAux.fromCSV = True Then
+                                                            'If loadTableAux.fromCSV = True Then
+                                                            If fromCSV = True Then
                                                                 attRef.TextString = circuits(index).wire.ToString & " mm²"
                                                             Else
                                                                 attRef.TextString = circuits(index).wire.ToString
@@ -519,7 +527,8 @@ end_of_for_01:
                                                             attRef.TextString = circuits(index).circ.ToString
                                                             Exit Select
                                                         Case "CIRC_DESCRIÇÃO"
-                                                            If loadTableAux.fromCSV = True Then
+                                                            'If loadTableAux.fromCSV = True Then
+                                                            If fromCSV = True Then
                                                                 attRef.TextString = "(" & circuits(index).desc.ToString & ")"
                                                             Else
                                                                 attRef.TextString = "(Description)"
@@ -550,7 +559,8 @@ end_of_for_01:
                     descText.SetDatabaseDefaults()
                     descText.Position = New Point3d((blkPos.X - 200), (blkPos.Y + 65), 0)
                     descText.Height = 15
-                    descText.TextString = loadTableAux.totalDesc
+                    'descText.TextString = loadTableAux.totalDesc
+                    descText.TextString = totalDesc
                     btr.AppendEntity(descText)
                     trans.AddNewlyCreatedDBObject(descText, True)
 
@@ -558,7 +568,8 @@ end_of_for_01:
                     totalLoadText.SetDatabaseDefaults()
                     totalLoadText.Position = New Point3d((blkPos.X - 195), (blkPos.Y + 45), 0)
                     totalLoadText.Height = 10
-                    totalLoadText.TextString = "(" & loadTableAux.totalLoad.ToString & " W)"
+                    'totalLoadText.TextString = "(" & loadTableAux.totalLoad.ToString & " W)"
+                    totalLoadText.TextString = "(" & totalLoad.ToString & " W)"
                     btr.AppendEntity(totalLoadText)
                     trans.AddNewlyCreatedDBObject(totalLoadText, True)
 
@@ -578,7 +589,9 @@ end_of_for_01:
                     'totalLoadText = Nothing
                     'frame = Nothing
 
-                    SortDRs(circuits, blkPos, loadTableAux)
+                    If fromCSV = True Then
+                        SortDRs(circuits, blkPos)
+                    End If
 
                 End Using
 
@@ -590,7 +603,7 @@ end_of_for_01:
         End If
     End Sub
 
-    Public Shared Sub SortDRs(circuits As List(Of CircuitClass), blkPos As Point3d, loadTableAux As LoadTableClass)
+    Public Sub SortDRs(circuits As List(Of CircuitClass), blkPos As Point3d)
         Dim nofDR As Integer = circuits.Count ' Number of DRs in the load table
         Dim drArray(nofDR) As String ' Array with all the DR's values in the load table
         'Dim drStartFinish(nofDR, 2) ' Where the DRs start and finish (related to the circuits they protect)
@@ -601,6 +614,7 @@ end_of_for_01:
         Dim currentDRValue As String
         Dim protEntradaStartPoint As Point3d = Nothing
         Dim protEntradaEndPoint As Point3d = Nothing
+        Dim DRType As String = "DDR"
 
         ' Passes the values of the DR's from the circuits to the DR array
         For index = 0 To (nofDR - 1)
@@ -626,8 +640,9 @@ end_of_for_01:
 
                     If currentDR IsNot nextDR And nextDR IsNot "" Then
                         busEndPoint = New Point3d(blkPos.X, blkPos.Y - 20, blkPos.Z)
-                        DrawLine(busStartPoint, busEndPoint, 6)
-                        DrawDR(currentDRValue, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z))
+                        Call CommonFunctions.DrawLine(busStartPoint, busEndPoint, 6)
+                        'Call DRClass.DrawDR(currentDRValue, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z))
+                        DRList.Add(New DRClass(circList, currentDRValue, DRType, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z)))
                         newDRAhead = True
 
                         If protEntradaStartPoint = Nothing Then
@@ -650,8 +665,9 @@ end_of_for_01:
 
                     If currentDR IsNot nextDR And nextDR IsNot "" Then
                         busEndPoint = New Point3d(blkPos.X, blkPos.Y + (index * (-60)) - 20, blkPos.Z)
-                        DrawLine(busStartPoint, busEndPoint, 6)
-                        DrawDR(currentDRValue, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z))
+                        Call CommonFunctions.DrawLine(busStartPoint, busEndPoint, 6)
+                        'Call DRClass.DrawDR(currentDRValue, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z))
+                        DRList.Add(New DRClass(circList, currentDRValue, DRType, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z)))
                         newDRAhead = True
 
                         If protEntradaStartPoint = Nothing Then
@@ -665,8 +681,9 @@ end_of_for_01:
                     End If
                 Else
                     busEndPoint = New Point3d(blkPos.X, blkPos.Y + (index * (-60)) - 20, blkPos.Z)
-                    DrawLine(busStartPoint, busEndPoint, 6)
-                    DrawDR(currentDRValue, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z))
+                    Call CommonFunctions.DrawLine(busStartPoint, busEndPoint, 6)
+                    'Call DRClass.DrawDR(currentDRValue, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z))
+                    DRList.Add(New DRClass(circList, currentDRValue, DRType, New Point3d(busStartPoint.X, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z)))
 
                     If protEntradaStartPoint = Nothing Then
                         protEntradaStartPoint = New Point3d(busStartPoint.X - 55, (busStartPoint.Y + busEndPoint.Y) / 2, busStartPoint.Z)
@@ -678,122 +695,22 @@ end_of_for_01:
             End If
         Next
 
-        DrawLine(protEntradaStartPoint, protEntradaEndPoint, 7)
-        DrawMainProtection(New Point3d(protEntradaStartPoint.X, (protEntradaStartPoint.Y + protEntradaEndPoint.Y) / 2, protEntradaStartPoint.Z), loadTableAux.totalBreaker, loadTableAux.totalWire, "??")
+        For index = 0 To (DRList.Count - 1)
+
+            'Dim DR As DRClass
+            'DR = DRList(index)
+            DRList(index).DrawDR()
+
+        Next
+
+        Call CommonFunctions.DrawLine(protEntradaStartPoint, protEntradaEndPoint, 7)
+        DrawMainProtection(New Point3d(protEntradaStartPoint.X, (protEntradaStartPoint.Y + protEntradaEndPoint.Y) / 2, protEntradaStartPoint.Z), totalBreaker, totalWire, "??")
 
     End Sub
 
-    ' Draws lines in the model space
-    Public Shared Sub DrawLine(startPoint As Point3d, endPoint As Point3d, colorIndex As Integer)
-        Dim doc As Document = Application.DocumentManager.MdiActiveDocument
-        Dim db As Database = doc.Database
-
-        ' Starts a transaction
-        Using trans As Transaction = db.TransactionManager.StartTransaction()
-            ' Opens the Block Table for reading
-            Dim bt As BlockTable = trans.GetObject(db.BlockTableId, OpenMode.ForRead)
-
-            ' Opens the Block Table Record for writing
-            Using btr As BlockTableRecord = trans.GetObject(bt(BlockTableRecord.ModelSpace), OpenMode.ForWrite)
-                startPoint = startPoint
-                endPoint = endPoint
-                Dim line As Line = New Line(startPoint, endPoint)
-                line.ColorIndex = colorIndex
-
-                btr.AppendEntity(line)
-                trans.AddNewlyCreatedDBObject(line, True)
-
-            End Using
-
-            trans.Commit()
-
-        End Using
-    End Sub
-
-    Public Shared Sub DrawDR(DRValue As String, DRPos As Point3d)
-
-        Call Commands.ChangeLayer("MD - Diagrama Unifilar")
-
-        If DRValue.Contains("-") Then
-            DrawLine(DRPos, New Point3d(DRPos.X - 55, DRPos.Y, DRPos.Z), 7)
-        Else
-
-            Dim doc As Document = Application.DocumentManager.MdiActiveDocument
-            Dim db As Database = doc.Database
-
-            Using trans As Transaction = db.TransactionManager.StartTransaction()
-
-                ' Opens the Block table for read
-                Dim bt As BlockTable = trans.GetObject(db.BlockTableId, OpenMode.ForRead)
-
-                Dim blkID As ObjectId = ObjectId.Null
-
-                If Not bt.Has("MD - DU DR") Then
-                    ' Add block from file
-                Else
-                    blkID = bt("MD - DU DR")
-                End If
-
-                ' Create and insert the new block reference
-                If blkID <> ObjectId.Null Then
-
-                    Using btr As BlockTableRecord = trans.GetObject(blkID, OpenMode.ForRead)
-                        Using blkRef As New BlockReference(New Point3d(DRPos.X - 45, DRPos.Y, DRPos.Z), btr.Id)
-
-                            Dim curBtr As BlockTableRecord = trans.GetObject(db.CurrentSpaceId, OpenMode.ForWrite)
-
-                            curBtr.AppendEntity(blkRef)
-                            trans.AddNewlyCreatedDBObject(blkRef, True)
-
-                            ' Verify block table record has attribute definitions associated with it
-                            If btr.HasAttributeDefinitions Then
-
-                                ' Add attributes from the block table record
-                                For Each objID As ObjectId In btr
-
-                                    Dim dbObj As DBObject = trans.GetObject(objID, OpenMode.ForRead)
-
-                                    If TypeOf dbObj Is AttributeDefinition Then
-
-                                        Dim attDef As AttributeDefinition = dbObj
-
-                                        If Not attDef.Constant Then
-
-                                            Using attRef As New AttributeReference
-
-                                                'If attRef.Tag = "DR_VALUE" Then
-
-                                                ' Draws the lines to the left and to the right of the DR Block (the ones that connect to the buses)
-                                                DrawLine(DRPos, New Point3d(DRPos.X - 10, DRPos.Y, DRPos.Z), 7)
-                                                DrawLine(New Point3d(DRPos.X - 45, DRPos.Y, DRPos.Z), New Point3d(DRPos.X - 55, DRPos.Y, DRPos.Z), 7)
-
-                                                attRef.SetAttributeFromBlock(attDef, blkRef.BlockTransform)
-                                                attRef.Position = attDef.Position.TransformBy(blkRef.BlockTransform)
-
-                                                attRef.TextString = DRValue & " A"
-
-                                                ' Add DU block to the block table record and to the transaction
-                                                blkRef.AttributeCollection.AppendAttribute(attRef)
-                                                trans.AddNewlyCreatedDBObject(attRef, True)
-
-                                                'End If
-                                            End Using
-                                        End If
-                                    End If
-                                Next
-                            End If
-                        End Using
-                    End Using
-                End If
-
-                trans.Commit()
-
-            End Using
-        End If
-    End Sub
 
     ' Draws the main protection
-    Public Shared Sub DrawMainProtection(protEntradaPos As Point3d, breaker As String, wire As Double, nomeEntrada As String)
+    Public Sub DrawMainProtection(protEntradaPos As Point3d, breaker As String, wire As Double, nomeEntrada As String)
         Call Commands.ChangeLayer("MD - Diagrama Unifilar")
 
         Dim doc As Document = Application.DocumentManager.MdiActiveDocument

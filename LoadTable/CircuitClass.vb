@@ -13,6 +13,7 @@
 
     Public connection As String  ' Connection Type (Single/Two/Three-Phase)
 
+    'Constructor for CSV file
     Public Sub New(circAux As String, descAux As String, loadAux As Integer, phasesAux As String, rAux As Integer, sAux As Integer, tAux As Integer, wireAux As Double, breakerAux As String, drAux As String)
 
         circ = circAux
@@ -28,6 +29,7 @@
 
     End Sub
 
+    'Constructor for when the attributes come from the project itself
     Public Sub New(circAux As String, loadAux As Integer, connAux As String, wireAux As Double)
 
         circ = circAux
@@ -40,8 +42,8 @@
         s = 0
         t = 0
         phases = "R"
-        breaker = GetBreaker()
         breaker = "-"
+        breaker = GetBreaker()
 
     End Sub
 
@@ -55,8 +57,8 @@
         t = 0
         phases = "R"
         wire = 0
-        breaker = GetBreaker()
         breaker = "-"
+        breaker = GetBreaker()
 
         connection = ""
 
@@ -79,6 +81,14 @@
         End Select
 
         Return breaker
+
+    End Function
+
+    Private Function GetPhases()
+
+        If r >= 0 Then
+
+        End If
 
     End Function
 
