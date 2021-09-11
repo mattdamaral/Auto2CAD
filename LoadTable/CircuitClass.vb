@@ -41,7 +41,7 @@
         r = 0
         s = 0
         t = 0
-        phases = "R"
+        Fases()
         breaker = "-"
         breaker = GetBreaker()
 
@@ -92,4 +92,35 @@
 
     End Function
 
+    Private Sub Fases()
+
+        phases = "-"
+
+        If r > 0 Then
+            phases = "R"
+        End If
+
+        If s > 0 Then
+            If r > 0 Then
+                phases.Concat("+S")
+            Else
+                phases = "S"
+            End If
+        End If
+
+        If t > 0 Then
+            If r > 0 Or s > 0 Then
+                phases.Concat("+T")
+            Else
+                phases = "T"
+            End If
+        End If
+
+    End Sub
+
+    Private Sub Esquema()
+
+
+
+    End Sub
 End Class

@@ -245,25 +245,25 @@ end_of_for_01:
 
         If totalLoad > 0 And totalLoad <= 25000 Then
             totalWire = "6"
-            totalBreaker = "30 A - C"
+            totalBreaker = "32"
         ElseIf totalLoad > 25000 And totalLoad <= 30000 Then
             totalWire = "10"
-            totalBreaker = "40 A - C"
+            totalBreaker = "40"
         ElseIf totalLoad > 30000 And totalLoad <= 35000 Then
             totalWire = "10"
-            totalBreaker = "50 A - C"
+            totalBreaker = "50"
         ElseIf totalLoad > 35000 And totalLoad <= 40000 Then
             totalWire = "16"
-            totalBreaker = "60 A - C"
+            totalBreaker = "63"
         ElseIf totalLoad > 40000 And totalLoad <= 50000 Then
             totalWire = "25"
-            totalBreaker = "70 A - C"
+            totalBreaker = "70"
         ElseIf totalLoad > 50000 And totalLoad <= 65000 Then
             totalWire = "35"
-            totalBreaker = "100 A - C"
+            totalBreaker = "100"
         ElseIf totalLoad > 65000 And totalLoad <= 75000 Then
             totalWire = "50"
-            totalBreaker = "125 A - C"
+            totalBreaker = "125"
         ElseIf totalLoad > 75000 Then
             totalWire = "-"
             totalBreaker = "-"
@@ -375,7 +375,7 @@ end_of_for_01:
             ' Creates a transaction for the database ---------------------------------------------------------------------------
             Using trans As Transaction = doc.TransactionManager.StartTransaction()
 
-                Call Commands.ChangeLayer("MD - Quadro de Cargas")
+                Call CommonFunctions.ChangeLayer("MD - Quadro de Cargas")
 
                 Dim lt As LayerTable
                 Dim ltr As New LayerTableRecord
@@ -441,7 +441,7 @@ end_of_for_01:
 
             Using trans As Transaction = db.TransactionManager.StartTransaction()
 
-                Call Commands.ChangeLayer("MD - Diagrama Unifilar")
+                Call CommonFunctions.ChangeLayer("MD - Diagrama Unifilar")
 
                 'Dim circuits As List(Of CircuitClass) = loadTableAux.circList
                 Dim circuits As List(Of CircuitClass) = circList
@@ -591,6 +591,14 @@ end_of_for_01:
 
                     If fromCSV = True Then
                         SortDRs(circuits, blkPos)
+                    Else
+                        CommonFunctions.DrawLine(New Point3d(blkPos.X, blkPos.Y + 20, 0), New Point3d(blkPos.X, blkPos.Y - (60 * (circuits.Count - 1)) - 20, 0), 6)
+                        CommonFunctions.DrawLine(New Point3d(blkPos.X - 55, blkPos.Y - ((60 * (circuits.Count - 1)) / 2), 0), New Point3d(blkPos.X, blkPos.Y - ((60 * (circuits.Count - 1)) / 2), 0), 7)
+                        'Call CommonFunctions.DrawLine(busStartPoint, busEndPoint, 6)
+                        DrawMainProtection(New Point3d(blkPos.X - 55, blkPos.Y - ((60 * (circuits.Count - 1)) / 2), 0), totalBreaker, totalWire, "QMXX")
+                        Dim busbar As CopperBusbarClass = New CopperBusbarClass(totalBreaker, New Point3d(blkPos.X, blkPos.Y - (60 * (circuits.Count - 1)) - 70, blkPos.Z))
+                        busbar.DrawBusbar()
+
                     End If
 
                 End Using
@@ -711,7 +719,7 @@ end_of_for_01:
 
     ' Draws the main protection
     Public Sub DrawMainProtection(protEntradaPos As Point3d, breaker As String, wire As Double, nomeEntrada As String)
-        Call Commands.ChangeLayer("MD - Diagrama Unifilar")
+        Call CommonFunctions.ChangeLayer("MD - Diagrama Unifilar")
 
         Dim doc As Document = Application.DocumentManager.MdiActiveDocument
         Dim db As Database = doc.Database

@@ -8,6 +8,15 @@ Imports System.IO
 
 Public Class Commands
 
+    <CommandMethod("QCDesenho")> 'Creates a load table from the drawing, based on the blocks withs attributes
+    Public Sub QCDesenho()
+
+        'Gets the info from the drawing
+        'Then calls for the drawLT function
+        GetAttributesFromDrawing()
+
+    End Sub
+
     <CommandMethod("zz")>
     Public Sub CreateLoadTable()
 
@@ -15,11 +24,180 @@ Public Class Commands
 
     End Sub
 
+    '------------------------------------------------------------------------------------------------------------------------------------------------
+
+    Public Sub GetAttributesFromDrawing()
+
+        Dim circList As New List(Of CircuitClass)()
+        Dim hasEnoughData As Boolean = False
+
+        'Accessess the database -------------------------------------------------------------------------------------------
+        Dim doc As Document = Application.DocumentManager.MdiActiveDocument
+        Dim db As Database = doc.Database
+        Dim ed As Editor = doc.Editor
+
+        'Creates a transaction for the database ---------------------------------------------------------------------------
+        Using trans As Transaction = doc.TransactionManager.StartTransaction()
+
+            Dim peo As PromptEntityOptions = New PromptEntityOptions("Selecione a POLYLINE que delimita o perímetro dos circuitos do QD:")
+
+            peo.SetRejectMessage("Objeto selecionado não é do tipo POLYLINE")
+            peo.AddAllowedClass(GetType(Polyline), True)
+
+            Dim objSelected = ed.GetEntity(peo)
+
+            'Checks if selection is ok
+            If objSelected.Status = PromptStatus.OK Then
+
+                Dim pl As Polyline = CType(trans.GetObject(objSelected.ObjectId, OpenMode.ForRead), Polyline)
+                Dim vertices(pl.NumberOfVertices) As Point3d 'Gets the vertices of the perimeter
+                Dim pointCollection As Point3dCollection = New Point3dCollection()
+
+                'Passes the vertices of the perimeter to a point3dCollection
+                For index = 0 To pl.NumberOfVertices - 1
+
+                    pointCollection.Add(pl.GetPoint3dAt(index))
+
+                Next
+
+                Dim tv As TypedValue() = New TypedValue(0) {}
+                tv.SetValue(New TypedValue(CInt(DxfCode.Start), "INSERT"), 0)
+                Dim filter As SelectionFilter = New SelectionFilter(tv)
+
+                Dim ss As SelectionSet = ed.SelectCrossingPolygon(pointCollection, filter).Value 'Creates a selection using the perimeter as reference
+
+                If ss IsNot Nothing Then
+
+                    'Tries to get the info of every selected object
+                    For Each so As SelectedObject In ss
+
+                        'Blocks' parameters
+                        Dim br As BlockReference = CType(trans.GetObject(so.ObjectId, OpenMode.ForRead), BlockReference)
+                        Dim ac As AttributeCollection = br.AttributeCollection
+
+                        'Attribute related parameters
+                        Dim circAux As Integer = Nothing
+                        Dim loadAux As Integer = Nothing
+                        Dim connAux As String = ""
+                        Dim wireAux As Double = Nothing
+
+                        'Fills the attribute list (attList) with attribute references
+                        For Each objID As ObjectId In ac
+
+                            Dim attR As AttributeReference = CType(trans.GetObject(objID, OpenMode.ForRead), AttributeReference)  'Stores the attribute
+
+                            'Checks if the attribute's tag is one of the below
+                            Select Case attR.Tag
+                                Case "CIRCUITO"
+                                    Integer.TryParse(attR.TextString, circAux) 'If the attribute's value is an intenger, save it to circAux
+                                Case "POTÊNCIA"
+                                    Integer.TryParse(attR.TextString, loadAux) 'If the attribute's value is an intenger, save it to loadAux
+                                Case "CONEXÃO"
+                                    connAux = attR.TextString.ToString 'Saves the type of connection (mono/bi/tri)
+                                Case "SEÇÃO"
+                                    Double.TryParse(attR.TextString, wireAux) 'If the attribute's value is a double, save it to wireAux
+                            End Select
+
+                        Next
+
+                        'Checks if circAux and loadAux were assigned a value
+                        If circAux > 0 And loadAux > 0 Then
+
+                            hasEnoughData = True
+
+                            If circList.Count > 0 Then 'If circList is not empty, either adds the load to an existing circuit or create a new one
+
+                                Dim foundSimiliarCirc = False
+
+                                For index = 0 To (circList.Count - 1) 'Checks if there's a circuit in circList with the same value as the attribute's value
+
+                                    If circAux = circList(index).circ Then
+
+                                        foundSimiliarCirc = True
+                                        circList(index).load += loadAux
+
+                                        Select Case wireAux
+                                            Case 2.5, 4.0, 6.0
+
+                                                If circList(index).wire < wireAux Then
+                                                    circList(index).wire = wireAux
+                                                End If
+
+                                                Exit Select
+                                            Case Else
+                                                wireAux = 2.5
+                                        End Select
+
+                                        GoTo goto_01
+
+                                    End If
+
+                                Next
+
+                                If foundSimiliarCirc = False Then      'If there's no circAux in circList, adds a new one to the end of the list
+
+                                    Select Case wireAux
+                                        Case 2.5, 4.0, 6.0
+                                            Exit Select
+                                        Case Else
+                                            wireAux = 2.5
+                                    End Select
+
+                                    circList.Add(New CircuitClass(circAux.ToString, loadAux, connAux, wireAux))
+
+                                End If
+
+                            Else                                       'If circList is empty, adds a new circuit and assigns the load to it
+
+                                Select Case wireAux
+                                    Case 2.5, 4.0, 6.0
+                                        Exit Select
+                                    Case Else
+                                        wireAux = 2.5
+                                End Select
+
+                                circList.Add(New CircuitClass(circAux.ToString, loadAux, connAux, wireAux))
+
+                            End If
+
+goto_01:
+
+                        End If
+
+                    Next
+
+                End If
+
+            Else    'Displays this message in case no objects were selected in the first place
+
+                MsgBox("No objects selected")
+
+            End If
+
+            trans.Commit()
+
+        End Using
+
+        If hasEnoughData = True Then
+
+            circList.Sort(Function(x, y) x.circ.CompareTo(y.circ))
+            Dim loadTableAux As LoadTableClass = New LoadTableClass(circList)
+            'Call LoadTableClass.CreateTable(loadTableAux)
+            loadTableAux.CreateTable()
+            'Call LoadTableClass.CreateDiagram(loadTableAux)
+            loadTableAux.CreateDiagram()
+
+        End If
+
+    End Sub
+
+    '------------------------------------------------------------------------------------------------------------------------------------------------
+
     ' Gets the circuits and loads -------------------------------------------------------------------------------------------------------------------
     Public Sub GetList()
 
-        Dim circList As New List(Of Integer)()
-        Dim loadList As New List(Of Integer)()
+        'Dim circList As New List(Of Integer)()
+        'Dim loadList As New List(Of Integer)()
         Dim circLoadList As New List(Of CircuitClass)()
         Dim hasEnoughData As Boolean = False
 
@@ -186,55 +364,6 @@ goto_01:
             loadTableAux.CreateDiagram()
 
         End If
-
-    End Sub
-
-    ' -----------------------------------------------------------------------------------------------------------------------------------------------
-
-    Public Shared Sub ChangeLayer(layerName As String)
-
-        ' Accessess the database -------------------------------------------------------------------------------------------
-        Dim doc As Document = Application.DocumentManager.MdiActiveDocument
-        Dim db As Database = doc.Database
-        Dim ed As Editor = doc.Editor
-
-        ' Creates a transaction for the database ---------------------------------------------------------------------------
-        Using trans As Transaction = doc.TransactionManager.StartTransaction()
-
-            Dim lt As LayerTable
-            Dim ltr As New LayerTableRecord
-            Dim layerID As ObjectId
-
-            ' Checks if layer exists
-            Try
-                ' If layer exists, get layerid
-                lt = CType(trans.GetObject(db.LayerTableId, OpenMode.ForRead, True, True), LayerTable)
-                layerID = lt.Item(layerName)
-
-                ' If the layer was deleted, recover layer
-                If layerID.IsErased Then
-                    lt.UpgradeOpen()
-                    lt.Item(layerName).GetObject(OpenMode.ForWrite, True, True).Erase(False)
-                End If
-
-            Catch ex As Exception
-                ' If the layer doesn't exist, create it
-                lt = db.LayerTableId.GetObject(OpenMode.ForWrite, True, True)
-                ltr.Name = layerName
-                lt.Add(ltr)
-                ' Adds layer to db
-                trans.AddNewlyCreatedDBObject(ltr, True)
-                ' Recovers layerid of newly created layer
-                lt = CType(trans.GetObject(db.LayerTableId, OpenMode.ForRead, False), LayerTable)
-                layerID = lt.Item(layerName)
-            End Try
-
-            ' Sets layer as current
-            db.Clayer = layerID
-
-            trans.Commit()
-
-        End Using
 
     End Sub
 
