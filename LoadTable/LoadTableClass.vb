@@ -585,6 +585,13 @@ end_of_for_01:
                     btr.AppendEntity(frame)
                     trans.AddNewlyCreatedDBObject(frame, True)
 
+                    'Draws the Ground
+                    Dim groundInsertionPoint As Point3d = New Point3d(blkPos.X + 75, blkPos.Y - (60 * (circuits.Count - 1) + 200), 0)
+                    CommonFunctions.DrawLine(groundInsertionPoint, New Point3d(groundInsertionPoint.X, groundInsertionPoint.Y - 20, 0), 3)
+                    CommonFunctions.DrawLine(New Point3d(groundInsertionPoint.X - 15, groundInsertionPoint.Y - 20, 0), New Point3d(groundInsertionPoint.X + 15, groundInsertionPoint.Y - 20, 0), 3)
+                    CommonFunctions.DrawLine(New Point3d(groundInsertionPoint.X - 9, groundInsertionPoint.Y - 27.5, 0), New Point3d(groundInsertionPoint.X + 9, groundInsertionPoint.Y - 27.5, 0), 3)
+                    CommonFunctions.DrawLine(New Point3d(groundInsertionPoint.X - 3, groundInsertionPoint.Y - 35, 0), New Point3d(groundInsertionPoint.X + 3, groundInsertionPoint.Y - 35, 0), 3)
+
                     'descText = Nothing
                     'totalLoadText = Nothing
                     'frame = Nothing

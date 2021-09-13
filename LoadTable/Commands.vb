@@ -356,7 +356,41 @@ goto_01:
 
         If hasEnoughData = True Then
 
-            circLoadList.Sort(Function(x, y) x.circ.CompareTo(y.circ))
+            circLoadList.Sort(Function(x, y) x.circ.CompareTo(y.circ)) 'To sort out the circuits in the list based on their numbers
+
+            'Displays the circuits data
+            Dim circuitsDataHeader As String = "Circuito / Descrição / Pot. Total / Fases / R / S / T / Seção / Disjuntor"
+            Dim circuitsDataList As New List(Of String)
+            circuitsDataList.Add(circuitsDataHeader)
+            'MsgBox("Circuito / Descrição / Pot. Total / Fases / R / S / T / Seção / Disjuntor")
+            For index = 0 To circLoadList.Count - 1
+                Dim currentCircuitData As String = (circLoadList(index).circ.ToString + " / " +
+                    circLoadList(index).desc.ToString + " / " +
+                    circLoadList(index).load.ToString + " / " +
+                    circLoadList(index).phases.ToString + " / " +
+                    circLoadList(index).r.ToString + " / " +
+                    circLoadList(index).s.ToString + " / " +
+                    circLoadList(index).t.ToString + " / " +
+                    circLoadList(index).wire.ToString + " / " +
+                    circLoadList(index).breaker.ToString)
+                circuitsDataList.Add(currentCircuitData)
+                'MsgBox(circLoadList(index).circ.ToString + " / " +
+                '    circLoadList(index).desc.ToString + " / " +
+                '    circLoadList(index).load.ToString + " / " +
+                '    circLoadList(index).phases.ToString + " / " +
+                '    circLoadList(index).r.ToString + " / " +
+                '    circLoadList(index).s.ToString + " / " +
+                '    circLoadList(index).t.ToString + " / " +
+                '    circLoadList(index).wire.ToString + " / " +
+                '    circLoadList(index).breaker.ToString)
+            Next
+            Dim circuitData As String
+            circuitData = String.Join(vbNewLine, circuitsDataList.ToArray())
+            'For index = 0 To circuitsDataList.Count - 1
+            '    circuitData = String.Concat(circuitsDataList(index))
+            'Next
+            MsgBox(circuitData)
+
             Dim loadTableAux As LoadTableClass = New LoadTableClass(circLoadList)
             'Call LoadTableClass.CreateTable(loadTableAux)
             loadTableAux.CreateTable()
