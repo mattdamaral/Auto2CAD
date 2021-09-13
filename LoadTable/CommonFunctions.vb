@@ -36,4 +36,53 @@ Public Class CommonFunctions
         End Using
     End Sub
 
+    ' -----------------------------------------------------------------------------------------------------------------------------------------------
+
+    Public Shared Sub ChangeLayer(layerName As String)
+
+        ' Accessess the database -------------------------------------------------------------------------------------------
+        Dim doc As Document = Application.DocumentManager.MdiActiveDocument
+        Dim db As Database = doc.Database
+        Dim ed As Editor = doc.Editor
+
+        ' Creates a transaction for the database ---------------------------------------------------------------------------
+        Using trans As Transaction = doc.TransactionManager.StartTransaction()
+
+            Dim lt As LayerTable
+            Dim ltr As New LayerTableRecord
+            Dim layerID As ObjectId
+
+            ' Checks if layer exists
+            Try
+                ' If layer exists, get layerid
+                lt = CType(trans.GetObject(db.LayerTableId, OpenMode.ForRead, True, True), LayerTable)
+                layerID = lt.Item(layerName)
+
+                ' If the layer was deleted, recover layer
+                If layerID.IsErased Then
+                    lt.UpgradeOpen()
+                    lt.Item(layerName).GetObject(OpenMode.ForWrite, True, True).Erase(False)
+                End If
+
+            Catch ex As Exception
+                ' If the layer doesn't exist, create it
+                lt = db.LayerTableId.GetObject(OpenMode.ForWrite, True, True)
+                ltr.Name = layerName
+                lt.Add(ltr)
+                ' Adds layer to db
+                trans.AddNewlyCreatedDBObject(ltr, True)
+                ' Recovers layerid of newly created layer
+                lt = CType(trans.GetObject(db.LayerTableId, OpenMode.ForRead, False), LayerTable)
+                layerID = lt.Item(layerName)
+            End Try
+
+            ' Sets layer as current
+            db.Clayer = layerID
+
+            trans.Commit()
+
+        End Using
+
+    End Sub
+
 End Class

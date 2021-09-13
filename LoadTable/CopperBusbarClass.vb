@@ -94,8 +94,104 @@ Public Class CopperBusbarClass
     ' Draws the busbar (dimensions for the phase/neutral/ground bars)
     Public Sub DrawBusbar()
 
+        Call CommonFunctions.ChangeLayer("MD - Diagrama Unifilar")
+
+        Dim wireColor As Integer = 7 ' White
 
 
+        Dim doc As Document = Application.DocumentManager.MdiActiveDocument
+            Dim db As Database = doc.Database
+
+        ' Starts a transaction
+        Using trans As Transaction = db.TransactionManager.StartTransaction()
+
+            ' Opens the Block table for read
+            Dim bt As BlockTable = trans.GetObject(db.BlockTableId, OpenMode.ForRead)
+
+            Dim blkID As ObjectId = ObjectId.Null ' The ID of the DR block
+
+            ' If there's no block called "MD..." in the block table, get it from the block .dwg, else use it from the block table
+            If Not bt.Has("MD - DU Barramento") Then
+                ' Should add block from a file path
+            Else
+                blkID = bt("MD - DU Barramento")
+            End If
+
+            ' Creates and inserts the new block reference
+            If blkID <> ObjectId.Null Then
+
+                Using btr As BlockTableRecord = trans.GetObject(blkID, OpenMode.ForRead)
+
+                    Using blkRef As New BlockReference(busbarPos, btr.Id)
+
+                        Dim curBtr As BlockTableRecord = trans.GetObject(db.CurrentSpaceId, OpenMode.ForWrite)
+
+                        curBtr.AppendEntity(blkRef)
+                        trans.AddNewlyCreatedDBObject(blkRef, True)
+
+                        ' Verify block table record has attribute definitions associated with it
+                        If btr.HasAttributeDefinitions Then
+                            For Each objID As ObjectId In btr
+
+                                Dim dbObj As DBObject = trans.GetObject(objID, OpenMode.ForRead)
+
+                                If TypeOf dbObj Is AttributeDefinition Then
+
+                                    Dim attDef As AttributeDefinition = dbObj
+
+                                    If Not attDef.Constant Then
+
+                                        Using attRef As New AttributeReference
+
+                                            attRef.SetAttributeFromBlock(attDef, blkRef.BlockTransform)
+                                            attRef.Position = attDef.Position.TransformBy(blkRef.BlockTransform)
+
+                                            'Checks If the attribute's tag is one of the below
+                                            Select Case attRef.Tag
+                                                Case "F"
+                                                    attRef.TextString = "F - " + busbarValue + " mm"
+                                                Case "N"
+                                                    attRef.TextString = "N - " + busbarValue + " mm"
+                                                Case "PE"
+                                                    attRef.TextString = "PE - " + busbarValue + " mm"
+                                            End Select
+
+                                            ' Add DU block to the block table record and to the transaction
+                                            blkRef.AttributeCollection.AppendAttribute(attRef)
+                                            trans.AddNewlyCreatedDBObject(attRef, True)
+
+                                        End Using
+                                    End If
+                                End If
+                            Next
+                            'Fills the attribute list (attList) with attribute references
+                            'For Each objID As ObjectId In btr
+
+                            '    Dim attR As AttributeReference = CType(trans.GetObject(objID, OpenMode.ForRead), AttributeReference)  'Stores the attribute
+
+                            '    Checks if the attribute's tag is one of the below
+                            '    Select Case attR.Tag
+                            '        Case "F"
+                            '            attR.TextString = busbarValue
+                            '        Case "N"
+                            '            attR.TextString = busbarValue
+                            '        Case "PE"
+                            '            attR.TextString = busbarValue
+                            '    End Select
+
+                            '     Add DU block to the block table record and to the transaction
+                            '    blkRef.AttributeCollection.AppendAttribute(attR)
+                            '    trans.AddNewlyCreatedDBObject(attR, True)
+
+                            'Next
+                        End If
+                    End Using
+                End Using
+            End If
+
+            trans.Commit()
+
+        End Using
     End Sub
 
 End Class

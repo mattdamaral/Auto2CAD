@@ -30,7 +30,7 @@ Public Class DRClass
     ' Draws the DR using a block from autocad
     Public Sub DrawDR()
 
-        Call Commands.ChangeLayer("MD - Diagrama Unifilar")
+        Call CommonFunctions.ChangeLayer("MD - Diagrama Unifilar")
 
         Dim wireColor As Integer = 7 ' White
 
